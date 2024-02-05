@@ -1,4 +1,6 @@
-﻿namespace MauiApp7
+﻿
+
+namespace MauiApp7
 {
     public partial class MainPage : ContentPage
     {
@@ -27,45 +29,93 @@
             if (Screenshot.Default.IsCaptureSupported)
             {
                 IScreenshotResult screen = await Screenshot.Default.CaptureAsync();
-                string appDirectory = System.IO.Path.GetTempPath();
 
                 Stream stream = await screen.OpenReadAsync();
 
                 var imageSource = ImageSource.FromStream(() => stream);
                 //Imafe.Source = imageSource;
-                string path2 = System.IO.Path.Combine(appDirectory, "image1.jpg");
+                string appDirectory="";
 
-                // Удаление файла, если он существует
-                if (System.IO.File.Exists(path2))
+
+                List<string> list = new List<string>();
+                DateTime dateTime = DateTime.Now;
+
+                string DATE = "";
+                var date = dateTime.ToString();
+                var dates = date.Replace('.', '_');
+
+                var DA = dates.Replace(':', '_');
+                for (int i = 0; i < DA.Length; i++)
                 {
-                    System.IO.File.Delete(path2);
-                }
-                var docsDirectory = Android.App.Application.Context.GetExternalFilesDir(Android.OS.Environment.DirectoryDownloads);
-                //var docsDirectory = Android.App.Application.Context.GetExternalFilesDir(Android.OS.Environment.DirectoryDocuments);
+                    if (DA[i].ToString() == "13")
+                    {
+                        DATE += "_";
+                    }
+                    else
+                    {
+                        list.Add(DA[i].ToString());
 
-                //File.WriteAllText($"{docsDirectory.AbsoluteFile.Path}/atextfile.txt", "contents are here");
-                string downloadsPath = Path.Combine(docsDirectory.AbsoluteFile.Path, "image1.jpg");
+
+
+                    }
+                }
+                DATE = "";
+                list.RemoveAt(10);
+                list.Insert(10, "_");
+                for (int i = 0; i < list.Count(); i++)
+                {
+                    if (list[i] == "")
+                    {
+
+                    }
+                    else
+                    {
+
+
+                        DATE += list[i].ToString();
+
+                    }
+                }
+
+
+                if (DeviceInfo.Platform == DevicePlatform.Android)
+                {
+#if ANDROID
+                    appDirectory = Android.OS.Environment.GetExternalStoragePublicDirectory(type: Android.OS.Environment.DirectoryDownloads).AbsolutePath;
+#endif
+                }
+                else if (DeviceInfo.Platform == DevicePlatform.WinUI)
+                {
+                    appDirectory = System.IO.Path.GetTempPath();
+                    string path2 = System.IO.Path.Combine(appDirectory, $"{Guid.NewGuid().ToString()}дата_{DATE}.jpg");
+                }
+
+                System.Diagnostics.Debug.WriteLine("Download Path: " + appDirectory);
+                appDirectory = Path.Combine(appDirectory, "Examiner");
+                if (!Directory.Exists(appDirectory))
+                {
+                    Directory.CreateDirectory(appDirectory);
+                    Console.WriteLine("Папка Downloads успешно создана.");
+                }
+                string downloadsPath = Path.Combine(appDirectory, $"{Guid.NewGuid().ToString()}дата_{DATE}.jpg");
 
                 type.Text = downloadsPath;
                 // Проверяем, существует ли папка, и если нет, создаем ее
-                //if (!Directory.Exists(downloadsPath))
-                //{
-                //    Directory.CreateDirectory(downloadsPath);
-                //    Console.WriteLine("Папка Downloads успешно создана.");
-                //}
 
-                if (System.IO.File.Exists(downloadsPath))
+
+                if (File.Exists(downloadsPath))
                 {
-                    System.IO.File.Delete(downloadsPath);
+                    File.Delete(downloadsPath);
+                    Console.WriteLine("Файл успешно удален.");
                 }
-
-                using (FileStream fileStream = new FileStream(downloadsPath, FileMode.OpenOrCreate))
+                else
                 {
-                    // Копирование данных из MemoryStream в FileStream
-                    stream.CopyTo(fileStream);
+                    Console.WriteLine("Файл не существует.");
                 }
+                MemoryStream memoryStream = new MemoryStream();
+                stream.CopyTo(memoryStream);
 
-
+                File.WriteAllBytes(downloadsPath, memoryStream.ToArray());
                 Images.Source = downloadsPath;
                 return imageSource;
             }
@@ -74,4 +124,12 @@
         }
     }
 
-}
+}                //var docsDirectory = Android.App.Application.Context.GetExternalFilesDir(Android.OS.Environment.DirectoryDocuments);
+                 ////var docsDirectory = Android.App.Application.Context.GetExternalFilesDir(Android.OS.Environment.DirectoryDocuments);
+                 //string downloadsPath = Path.Combine(docsDirectory.AbsoluteFile.Path, $"{Guid.NewGuid().ToString()}дата_{DATE}.jpg");
+
+//using (FileStream fileStream = new FileStream(downloadsPath, FileMode.OpenOrCreate))
+//{
+//    // Копирование данных из MemoryStream в FileStream
+//    stream.CopyTo(fileStream);
+//}
